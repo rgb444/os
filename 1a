@@ -1,0 +1,37 @@
+[1]
+echo "Enter three numbers"
+read a b c
+
+if [ $a -ge $b -a $a -ge $c ]; then
+    echo "$a is greater"
+elif [ $b -ge $a -a $b -ge $c ]; then
+    echo "$b is greater"
+elif [ $c -ge $a -a $c -ge $b ]; then
+    echo "$c is greater"
+fi
+
+[2]
+echo "Enter number:"
+read n
+
+flag=0
+i=2
+m=`expr $n / 2`
+
+while [ $i -le $m ]
+do
+    rem=`expr $n % $i`
+    if [ $rem -eq 0 ]
+    then
+        flag=1
+        break
+    fi
+    i=`expr $i + 1`
+done
+
+if [ $flag -eq 0 ]
+then
+    echo "$n is a prime number"
+else
+    echo "$n is not a prime number"
+fi
