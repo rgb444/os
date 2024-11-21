@@ -1,82 +1,69 @@
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 void asc(int arr[], int n) {
-  int i, j, temp;
-  for (i = 0; i < n - 1; i++) {
-    for (j = i + 1; j < n; j++) {
-      if (arr[i] > arr[j]) {
-        temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-      }
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] > arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
     }
-  }
-  printf("Ascending order arrangement: ");
-  for (i = 0; i < n; i++) {
-    printf("%d ", arr[i]);
-  }
-  printf("\n");
+    printf("Ascending order: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
 }
 
 void desc(int arr[], int n) {
-  int i, j, temp;
-  for (i = 0; i < n - 1; i++) {
-    for (j = i + 1; j < n; j++) {
-      if (arr[i] < arr[j]) {
-        temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-      }
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] < arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
     }
-  }
-  printf("Descending order arrangement: ");
-  for (i = 0; i < n; i++) {
-    printf("%d ", arr[i]);
-  }
-  printf("\n");
+    printf("Descending order: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
 }
 
 int main() {
-  int n, i;
-  pid_t pid;
+    int n;
 
-  printf("Enter number of elements: ");
-  scanf("%d", &n);
-  int arr[n];
-  printf("Enter array elements: ");
-  for (i = 0; i < n; i++) {
-    printf("\na[%d] : ", i);
-    scanf("%d", &arr[i]);
-  }
-  printf("\n");
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
 
-  pid = fork();
-  if (pid < 0) {
-    perror("Fork error\n");
-  } else if (pid == 0) {
-    printf("Child process ID: %ld\n", (long)getpid());
-  } else {
-    printf("Parent process ID: %ld\n", (long)getpid());
-  }
+    int arr[n];
+    printf("Enter elements:\n");
+    for (int i = 0; i < n; i++) {
+        printf("arr[%d]: ", i);
+        scanf("%d", &arr[i]);
+    }
 
-  switch (pid) {
-    case -1:
-      printf("\nFork error\n");
-      exit(-1);
-    case 0:
-      printf("\nChild process\n");
-      asc(arr, n);
-      exit(pid);
-    default:
-      printf("\nParent executes\n");
-      desc(arr, n);
-      system("ps -elf");
-      exit(pid);
-  }
+    pid_t pid = fork();
 
-  return 0;
+    if (pid == -1) {
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        printf("Child process: %ld\n", (long)getpid());
+        asc(arr, n);
+    } else {
+        printf("Parent process: %ld\n", (long)getpid());
+        desc(arr, n);
+        wait(NULL); // Wait for the child process to finish
+        system("ps -elf");
+    }
+
+    return 0;
 }
