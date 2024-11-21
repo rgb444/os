@@ -61,9 +61,9 @@ int main() {
     for (int i = 0; i < n; i++) {
         printf("\nEnter details for Process %d:\n", i + 1);
         processes[i].pid = i + 1;
-        printf("Arrival Time: ");
+        printf("Arrival Time:");
         scanf("%d", &processes[i].arrivalTime);
-        printf("Burst Time: ");
+        printf("Burst Time:");
         scanf("%d", &processes[i].burstTime);
     }
 
