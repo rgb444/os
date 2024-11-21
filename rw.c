@@ -1,93 +1,101 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<pthread.h>
-#include<semaphore.h>
-#include<stdint.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdint.h>
+#include <unistd.h>
 
-#define R 5
-#define W 5
-int readcount;
-int writecount;
+#define R 5 // Number of readers
+#define W 5 // Number of writers
 
-sem_t y,z;
-pthread_mutex_t x;
-sem_t wsem,rsem;
-int s=5;
-void *reader1(void *a);
-void *writer1(void *a);
-//void *reader2(void *a);
-//void *writer2(void *a);
-int main()
-{
-	int i,op;
-	pthread_t thread_read[R],thread_write[W];
-	pthread_mutex_init(&x,NULL);
+int readcount = 0;  // Number of active readers
+int s = 5;          // Shared resource
 
-	sem_init(&wsem,0,1);
-	sem_init(&y,0,1);
-	sem_init(&rsem,0,1);
-	sem_init(&z,0,1);
+pthread_mutex_t x;  // Mutex for reader count update
+sem_t wsem;         // Semaphore for writers
 
-	do{
-		printf("Menu: 1.Readers have priority 2:exit");
-		scanf("%d",&op);
-		if(op==1)
-		{ 
-			readcount = 0;
-				for(i=0;i<W;i++)
-				{
-					pthread_create(&thread_write[i],NULL,*writer1,(void *) (intptr_t) i);
-				}
-				for(i=0;i<R;i++)
-				{
-					pthread_create(&thread_read[i],NULL,*reader1,(void *) (intptr_t) i);
-				}
-				for(i=0;i<W;i++)
-				{
-					pthread_join(thread_write[i],NULL);
-				}
-				for(i=0;i<R;i++)
-				{
-					pthread_join(thread_read[i],NULL);
-				}
-		}
-		else
-		{
-			break;
-		}
-	}while(op!=2);
-}
-void *reader1(void *a)
-{
-	int r = (intptr_t) a;
-	int i=0;
-	while(i<5){
-		pthread_mutex_lock(&x);
-		readcount++;
-		if(readcount == 1)
-			sem_wait(&wsem);
-		pthread_mutex_unlock(&x);
-		printf("\t\t Reader %d is reading : %d \n",r,s);
-		pthread_mutex_lock(&x);
-		readcount--;
-		if(readcount==0)
-			sem_post(&wsem);
-		pthread_mutex_unlock(&x);
-		sleep(rand() % 10);
-		i++;
-	}
+// Function declarations
+void *reader(void *a);
+void *writer(void *a);
+
+int main() {
+    int i, op;
+    pthread_t thread_read[R], thread_write[W];
+
+    // Initialize mutex and semaphores
+    pthread_mutex_init(&x, NULL);
+    sem_init(&wsem, 0, 1); // Binary semaphore for writers
+
+    do {
+        printf("\nMenu:\n1. Readers have priority\n2. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &op);
+
+        if (op == 1) {
+            for (i = 0; i < W; i++) {
+                pthread_create(&thread_write[i], NULL, writer, (void *)(intptr_t)i);
+            }
+            for (i = 0; i < R; i++) {
+                pthread_create(&thread_read[i], NULL, reader, (void *)(intptr_t)i);
+            }
+
+            for (i = 0; i < W; i++) {
+                pthread_join(thread_write[i], NULL);
+            }
+            for (i = 0; i < R; i++) {
+                pthread_join(thread_read[i], NULL);
+            }
+        } else if (op == 2) {
+            printf("Exiting...\n");
+            break;
+        } else {
+            printf("Invalid option. Please try again.\n");
+        }
+    } while (op != 2);
+
+    // Destroy mutex and semaphores
+    pthread_mutex_destroy(&x);
+    sem_destroy(&wsem);
+
+    return 0;
 }
 
-void *writer1(void *a){
-	int w = (intptr_t) a;
-	int i=0;
-	while(i<2){
-		sem_wait(&wsem);
-		s+=5;
-		printf("Writer %d is writing : %d \n",w,s);
-		sem_post(&wsem);
-		sleep(rand() % 10);
-		i++;
-	}
+void *reader(void *a) {
+    int r = (intptr_t)a; // Reader ID
+    for (int i = 0; i < 5; i++) {
+        pthread_mutex_lock(&x); // Lock to update reader count
+        readcount++;
+        if (readcount == 1) {
+            sem_wait(&wsem); // First reader blocks writers
+        }
+        pthread_mutex_unlock(&x); // Unlock after updating reader count
+
+        // Reading the shared resource
+        printf("Reader %d is reading: %d\n", r, s);
+
+        pthread_mutex_lock(&x); // Lock to update reader count
+        readcount--;
+        if (readcount == 0) {
+            sem_post(&wsem); // Last reader unblocks writers
+        }
+        pthread_mutex_unlock(&x); // Unlock after updating reader count
+
+        sleep(rand() % 3); // Simulate reading time
+    }
+    return NULL;
+}
+
+void *writer(void *a) {
+    int w = (intptr_t)a; // Writer ID
+    for (int i = 0; i < 2; i++) {
+        sem_wait(&wsem); // Writer blocks other writers and readers
+
+        // Writing to the shared resource
+        s += 5;
+        printf("Writer %d is writing: %d\n", w, s);
+
+        sem_post(&wsem); // Writer unblocks others
+        sleep(rand() % 3); // Simulate writing time
+    }
+    return NULL;
 }
