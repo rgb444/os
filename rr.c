@@ -1,53 +1,109 @@
 #include <stdio.h>
 
-int main()
-{
+struct Process {
+    int pid;
+    int arrivalTime;
+    int burstTime;
+    int remainingTime;
+    int waitingTime;
+    int turnaroundTime;
+    int completionTime;
+};
 
-    int cnt, j, n, t, remain, flag = 0, tq;
-    int wt = 0, tat = 0, at[10], bt[10], rt[10];
-    printf("Enter Total Process:\t ");
+void roundRobin(struct Process processes[], int n, int timeQuantum) {
+    int currentTime = 0, completed = 0, queue[n], front = 0, rear = 0;
+    int visited[n];
+
+    for (int i = 0; i < n; i++) {
+        visited[i] = 0;
+        processes[i].remainingTime = processes[i].burstTime;
+    }
+
+    queue[rear++] = 0;
+    visited[0] = 1;
+
+    while (completed < n) {
+        int i = queue[front++];
+        if (front == n) front = 0;
+
+        if (currentTime < processes[i].arrivalTime) {
+            currentTime = processes[i].arrivalTime;
+        }
+
+        if (processes[i].remainingTime > timeQuantum) {
+            processes[i].remainingTime -= timeQuantum;
+            currentTime += timeQuantum;
+        } else {
+            currentTime += processes[i].remainingTime;
+            processes[i].remainingTime = 0;
+            processes[i].completionTime = currentTime;
+            processes[i].turnaroundTime = processes[i].completionTime - processes[i].arrivalTime;
+            processes[i].waitingTime = processes[i].turnaroundTime - processes[i].burstTime;
+            completed++;
+        }
+
+        for (int j = 0; j < n; j++) {
+            if (j != i && !visited[j] && processes[j].arrivalTime <= currentTime && processes[j].remainingTime > 0) {
+                queue[rear++] = j;
+                if (rear == n) rear = 0;
+                visited[j] = 1;
+            }
+        }
+
+        if (processes[i].remainingTime > 0) {
+            queue[rear++] = i;
+            if (rear == n) rear = 0;
+        }
+    }
+}
+
+void displayProcesses(struct Process processes[], int n) {
+    float totalWaitingTime = 0, totalTurnaroundTime = 0;
+
+    printf("\n+-----+---------+-------+---------+------------+------------+\n");
+    printf("| PID | Arrival | Burst | Waiting | Turnaround | Completion |\n");
+    printf("+-----+---------+-------+---------+------------+------------+\n");
+
+    for (int i = 0; i < n; i++) {
+        printf("| %-3d | %-7d | %-5d | %-7d | %-10d | %-10d |\n", 
+               processes[i].pid, 
+               processes[i].arrivalTime, 
+               processes[i].burstTime, 
+               processes[i].waitingTime, 
+               processes[i].turnaroundTime, 
+               processes[i].completionTime);
+
+        totalWaitingTime += processes[i].waitingTime;
+        totalTurnaroundTime += processes[i].turnaroundTime;
+    }
+
+    printf("+-----+---------+-------+---------+------------+------------+\n");
+    printf("Average Waiting Time: %.2f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time: %.2f\n", totalTurnaroundTime / n);
+}
+
+int main() {
+    int n, timeQuantum;
+
+    printf("Enter the number of processes:");
     scanf("%d", &n);
-    remain = n;
-    for (cnt = 0; cnt < n; cnt++)
-    {
-        printf("Enter Arrival Time and Burst Time for Process Process Number %d :", cnt + 1);
-        scanf("%d", &at[cnt]);
-        scanf("%d", &bt[cnt]);
-        rt[cnt] = bt[cnt];
+
+    struct Process processes[n];
+
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        printf("\nEnter details for Process %d:\n", i + 1);
+        printf("Arrival Time:");
+        scanf("%d", &processes[i].arrivalTime);
+        printf("Burst Time:");
+        scanf("%d", &processes[i].burstTime);
     }
-    printf("Enter Time Quantum:\t");
-    scanf("%d", &tq);
-    printf("\n\nProcess\t|Turnaround Time|Waiting Time\n\n");
-    for (t = 0, cnt = 0; remain != 0;)
-    {
-        if (rt[cnt] <= tq && rt[cnt] > 0)
-        {
-            t += rt[cnt];
-            rt[cnt] = 0;
-            flag = 1;
-        }
-        else if (rt[cnt] > 0)
-        {
-            rt[cnt] -= tq;
-            t += tq;
-        }
-        if (rt[cnt] == 0 && flag == 1)
-        {
-            remain--;
-            printf("P[%d]\t|\t%d\t|\t%d\n", cnt + 1, t - at[cnt], t - at[cnt] - bt[cnt]);
-            wt += t - at[cnt] - bt[cnt];
-            tat += t - at[cnt];
-            flag = 0;
-        }
-        if (cnt == n - 1)
-            cnt = 0;
-        else if (at[cnt + 1] <= t)
-            cnt++;
-        else
-            cnt = 0;
-    }
-    printf("\nAverage Waiting Time= %f\n", wt * 1.0 / n);
-    printf("Avg Turnaround Time = %f", tat * 1.0 / n);
+
+    printf("\nEnter the Time Quantum:");
+    scanf("%d", &timeQuantum);
+
+    roundRobin(processes, n, timeQuantum);
+    displayProcesses(processes, n);
 
     return 0;
 }
