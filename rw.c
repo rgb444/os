@@ -99,3 +99,49 @@ void *writer(void *a) {
     }
     return NULL;
 }
+
+// explanation=>
+// This code implements the Reader-Writer problem with Reader Priority using threads, mutex locks, and semaphores. It allows multiple readers to read simultaneously, while writers have exclusive access to the shared resource.
+
+// Key Components:
+// Shared Resource (s):
+
+// A variable that readers read, and writers modify.
+// Reader Count (readcount):
+
+// Tracks the number of active readers.
+// Synchronization Mechanisms:
+
+// pthread_mutex_t x: Protects readcount from concurrent updates.
+// sem_t wsem: Ensures exclusive access to the shared resource for writers.
+// Workflow:
+// Main Program:
+
+// Creates 5 reader threads and 5 writer threads.
+// Repeatedly prompts the user with a menu:
+// Option 1: Run the Reader-Writer simulation.
+// Option 2: Exit the program.
+// Reader Threads:
+
+// Each reader:
+// Locks the mutex to increment readcount.
+// If it is the first reader, it blocks writers by waiting on wsem.
+// Reads the shared resource (s) and prints its value.
+// Decrements readcount. If it is the last reader, it unblocks writers by signaling wsem.
+// Readers simulate some reading time by sleeping randomly.
+// Writer Threads:
+
+// Each writer:
+// Waits on wsem to block readers and other writers.
+// Modifies the shared resource (s) and prints the updated value.
+// Signals wsem to unblock others.
+// Writers simulate writing time by sleeping randomly.
+// Reader-Writers Priority:
+// Reader Priority:
+// Readers can read concurrently.
+// A writer must wait until all readers finish.
+// The first reader blocks writers, and the last reader unblocks them.
+// Example Execution:
+// Multiple readers can read simultaneously (e.g., Reader 1 and Reader 2 reading s=5).
+// Writers gain exclusive access (e.g., Writer 1 updates s=10).
+// This code efficiently handles synchronization while ensuring reader priority.
