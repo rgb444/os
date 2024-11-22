@@ -1,113 +1,93 @@
 #include <stdio.h>
-#define MAX_FRAMES 10
-#define MAX_PAGES 30
-
-int findPageToReplace(int frames[], int num_frames, int pages[], int current_index, int num_pages)
+int optimal(int pages[],int page_size,int frames[],int frame_size,int currindex)
 {
-    int farthest_index = -1, pos_to_replace = -1;
-
-    for (int i = 0; i < num_frames; i++)
-    {
-        int found = 0;
-
-        for (int j = current_index + 1; j < num_pages; j++)
-        {
-            if (frames[i] == pages[j])
-            {
-                found = 1;
-                if (j > farthest_index)
-                {
-                    farthest_index = j;
-                    pos_to_replace = i;
+    int found = 0;
+    int farthest = -1;
+    int pos = 0;
+    for(int i=0;i<frame_size;i++){
+        found=0;
+        for(int j=currindex+1;j<page_size;j++){
+            if(pages[j]==frames[i]){
+                found=1;
+                if(farthest<j){
+                    farthest=j;
+                    pos = i;
                 }
-                break;
+                  break;
             }
         }
-
-        if (!found)
-        {
+        if(found==0){
             return i;
         }
+        
     }
-
-    return (pos_to_replace == -1) ? 0 : pos_to_replace;
-}
-
-void printFrames(int frames[], int num_frames)
-{
-    for (int i = 0; i < num_frames; i++)
-    {
-        if (frames[i] != -1)
-            printf("%d ", frames[i]);
-        else
-            printf("- ");
-    }
-    printf("\n");
-}
-
-void optimalPageReplacement(int pages[], int num_pages, int num_frames)
-{
-    int frames[MAX_FRAMES];
-    int faults = 0, hits = 0;
-
-    for (int i = 0; i < num_frames; i++)
-    {
-        frames[i] = -1;
-    }
-
-    printf("\nOptimal Page Replacement:\n");
-
-    for (int i = 0; i < num_pages; i++)
-    {
-        int page = pages[i];
-        int flag_hit = 0;
-
-        for (int j = 0; j < num_frames; j++)
-        {
-            if (frames[j] == page)
-            {
-                hits++;
-                flag_hit = 1;
-                break;
-            }
-        }
-
-        if (!flag_hit)
-        {
-            faults++;
-            int replace_index = findPageToReplace(frames, num_frames, pages, i, num_pages);
-            frames[replace_index] = page;
-            printf("Page %d caused a page fault. Frames: ", page);
-        }
-        else
-        {
-            printf("Page %d already in frames. Frames: ", page);
-        }
-
-        printFrames(frames, num_frames);
-    }
-
-    printf("Total Page Faults (Optimal): %d\n", faults);
-    printf("Total Page Hits (Optimal): %d\n", hits);
+    return pos;
 }
 
 int main()
-{
-    int pages[MAX_PAGES], num_pages, num_frames;
-
-    printf("Enter the number of frames: ");
-    scanf("%d", &num_frames);
-
-    printf("Enter the number of pages: ");
-    scanf("%d", &num_pages);
-
-    printf("Enter the page reference sequence: ");
-    for (int i = 0; i < num_pages; i++)
-    {
-        scanf("%d", &pages[i]);
+{   
+    int frame_size,page_size;
+    printf("Enter the size of the frames : ");
+    scanf("%d",&frame_size);
+    
+    printf("Enter pages size : ");
+    scanf("%d",&page_size);
+    
+    int pages[page_size],frames[frame_size];
+    for(int i=0;i<frame_size;i++){
+        frames[i]=-1;
     }
-
-    optimalPageReplacement(pages, num_pages, num_frames);
+    
+    
+    printf("Enter pages : ");
+    for(int i=0;i<page_size;i++){
+        scanf("%d",&pages[i]);
+    }
+    
+    
+    printf("\n\n");
+    int flag1,flag2,pos,hit=0,fault=0;
+    
+    for(int i=0;i<page_size;i++){
+        flag1=0,flag2=0,pos;
+    
+        for(int j=0;j<frame_size;j++){
+            if(frames[j]==pages[i]){
+                flag1=flag2=1;
+                hit++;
+                break;
+            }
+        }
+        
+        if(flag1==0){
+            for(int j=0;j<frame_size;j++){
+                if(frames[j]==-1){
+                    frames[j]=pages[i];
+                    flag2=1;
+                    fault++;
+                    break;
+                }
+            }
+        }
+        
+        if(flag2==0){
+            pos = optimal(pages,page_size,frames,frame_size,i);
+            frames[pos]=pages[i];
+            fault++;
+        }
+        
+        printf("At %d page frame is:",pages[i]);
+        for(int j=0;j<frame_size;j++){
+            if(frames[j]!=-1)
+            printf("%d ",frames[j]);
+        }
+        printf("\n");
+        
+        
+    }
+    
+    printf("Total age fault is %d \n",fault);
+    printf("Total Page hit is %d \n",hit);
 
     return 0;
 }
