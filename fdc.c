@@ -108,3 +108,59 @@ int main()
 
 //cc file.c
 //./a.out
+// Explanation =>
+// This code demonstrates Inter-Process Communication (IPC) between two processes using named pipes (FIFOs). There are two processes, Producer (P1) and Consumer (P2), communicating via two named pipes (comm_pipe1 and comm_pipe2). The producer sends a string to the consumer, and the consumer processes it by counting words, vowels, characters, and lines, then sends the results back to the producer.
+
+// Process 1 (Producer - P1):
+// FIFO Creation:
+// The producer creates two named pipes (comm_pipe1 and comm_pipe2) using mknod.
+// Write to FIFO1:
+// The producer waits for the consumer to be ready. Once the consumer is connected, the producer reads a string from the user using gets().
+// The string is written to the named pipe comm_pipe1 using write().
+// Read from FIFO2:
+// The producer then waits for the consumer's response from comm_pipe2. After receiving the response, it prints the message from the consumer.
+// Close FDs:
+// Finally, the producer closes the file descriptors (fd1 and fd2).
+// Process 2 (Consumer - P2):
+// FIFO Creation:
+// Similar to the producer, the consumer creates the same named pipes (comm_pipe1 and comm_pipe2).
+// Read from FIFO1:
+// The consumer waits for the producer to send a string through comm_pipe1. It reads this string and processes it.
+// String Processing:
+// The consumer counts:
+// Words: The number of words in the string.
+// Vowels: The vowels in the string (a, e, i, o, u).
+// Characters: Non-space characters.
+// Lines: The number of lines based on periods ('.').
+// Write to FIFO2:
+// The processed information (word count, vowel count, character count, and line count) is formatted and written to comm_pipe2, which the producer reads.
+// Additionally, the consumer logs this information into a file (fifo.txt).
+// Close FDs:
+// The consumer closes the file descriptors and the file itself (fp).
+// Key Functions:
+// mknod():
+// Creates named pipes (FIFOs) with read and write permissions.
+// open():
+// Opens the named pipes for reading and writing.
+// write() and read():
+// Used for communication between the producer and consumer through the pipes.
+// sprintf():
+// Formats the result string before writing it to the pipe.
+// Compilation and Execution:
+// Compilation: cc file.c
+// Execution: ./a.out
+// This will run the producer-consumer communication process.
+// Explanation of the Output:
+// Producer: Waits for user input, sends it to the consumer, and then receives the processed result.
+// Consumer: Processes the input, counts the words, vowels, characters, and lines, and sends the results back to the producer. It also logs the information to a file.
+// Issues in Code:
+// Use of gets(): gets() is unsafe because it doesn't prevent buffer overflow. It's recommended to use fgets() instead.
+// sig variable: The sig variable is not initialized or used properly, and it seems like an incomplete condition for writing to fd2. The condition if(sig==write(fd2,send,strlen(send))!=-1) is incorrect and should be fixed.
+// File Descriptors: mknod() is used to create named pipes, but it would be better to use mkfifo() which is more portable and recommended for FIFO creation in modern systems.
+// This code demonstrates a basic interaction between two processes using named pipes, where the producer sends data, and the consumer processes and returns the result.
+
+
+
+
+
+
